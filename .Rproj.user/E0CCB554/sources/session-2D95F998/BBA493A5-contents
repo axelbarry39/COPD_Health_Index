@@ -1,0 +1,72 @@
+
+COPD_HEALTH_INDEX_fct <- function(y, X, signiThresh, slopeThresh) {
+
+z <- list()
+
+
+for(i in 1:ncol(X)) {
+  if  (is.numeric(X[,i]) == TRUE) {
+    
+    model_glm<- summary(glm(y ~ scale(X[,i]) , family = binomial(link = "logit")))
+    
+  }
+  
+  else                            {
+    
+    model_glm <- summary(glm(y ~X[,i] , family = binomial(link = "logit")))
+    
+  }
+  
+  z[[i]] <- model_glm$coefficients
+}
+names(z) <- colnames(X)
+
+
+
+
+a <- data.frame()
+varNames <- vector(mode = "character")
+counter <- 1
+
+##For loop inserting our glm summary ouput into a data.frame##
+
+for (i in 1:length(z)) {
+  
+  for (j in 2:nrow(z[[i]])) {
+    
+    a[counter,1] <- z[[i]][j,1] 
+    
+    a[counter,2] <- z[[i]][j,4] 
+    
+    varNames[counter] <- names(z[i])
+    
+    counter <- counter + 1
+    
+  }
+}
+
+
+colnames(a) <- c("Estimate", "Pr(>|z|)")
+matrice <- cbind(varNames, a)
+Decision <- vector(mode = "logical")
+                                         
+
+                                         
+for (i in 1:nrow(matrice)) {
+  
+  if  (matrice[i,3] < signiThresh & abs(matrice[i,2]) > slopeThresh) {
+    
+    Decision[length(Decision)+1] <- matrice[i,1]
+    
+  }
+}
+Decision <- unique(Decision)
+Decision
+
+
+print(Decision)
+
+
+}
+
+

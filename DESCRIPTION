@@ -1,0 +1,5 @@
+Package: COPD_Health_Index
+Type: Package
+Title: Disease health index for health sciecne
+Version: 0.0.1
+RoxygenNote: 7.2.3

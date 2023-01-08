@@ -1,0 +1,392 @@
+#Import Data#
+{
+##install.packages("haven")##
+library(haven)
+###import the different dataset we need to develop the index##
+###SRAP DATA###
+setwd("~/Data/40151C00/BD/BD/SRAP")
+participants_2007_2016_01oct21 <- read_sas("participants_2007_2016_01oct21.sas7bdat")
+###ESCC data###
+setwd("~/Data/40151C00/BD/BD/ESCC/ESCC regroupées (2007_2008-2009_2010-2011_2012-2013_2014-2015_2016)")
+escc_2007_2016_cvm <- read_sas("escc_2007_2016_cvm.sas7bdat")
+
+}
+#Modify ESCC and Participant data#
+{
+##ESCC_2007-2016##
+escc <- escc_2007_2016_cvm[, c("NOINDIV_SRAP_BAN","CCC_091","DHHDECF","DHHDLVG","GEN_01",
+                               "GEN_07","GEN_09","SLP_01","SLP_02","HWT_3","CCC_031","CCC_101","CCC_131",
+                               "CCC_290","HUIDMOB", "FVC_2A", "PAC_3A",
+                               "PACDPAI","PACDTLE","SMK_01A","SMK_01C","SMK_05B","SMK_05D",
+                               "SMK_06C","SMK_10","SMK_10C","SMK_202","SMK_203","ETS_10","ALC_1",
+                               "ALC_2","ALWDDLY","DPS_13","INC_5B","INC_8A","FSC_020", "GEODUR2")]
+
+
+##Participants##
+participants <- participants_2007_2016_01oct21[,c("NOINDIV_SRAP_BAN","sexe_srap","date_naiss_srap", "NB_HOSP_PRE_1", "dat_interview_escc")]
+
+}
+#Remove all dataset#
+{
+rm(participants_2007_2016_01oct21)
+rm(apr_drg_1996_2016_gen)
+}
+#Merge the different useful info in one dataframe#
+{
+indice <- cbind(escc, participants)
+indice <- indice[,-38]
+}
+#Only take the patients over 45yo#
+{
+#replace the date of birth by the nbs of day alive
+age = as.Date(indice$date_naiss_srap, tryFormats = c("%Y-%m-%d"))
+age_patient <- data.frame(age)
+age_patient$date <- indice$dat_interview_escc
+age_patient$date <- as.Date(age_patient$date, tryFormats = c("%Y-%m-%d"))
+age_patient$diff <- age_patient$date - age_patient$age
+age_patient$diff <- as.numeric(age_patient$diff)
+#put the age of the patient into the index dataframe
+indice$annee_naissance <- age_patient$diff
+#Determine how much day is 35#
+limit = 35*365.25
+#Apply filter on dataframe to only select the 45yo and more#
+indice <- indice[indice$annee_naissance >= limit,]
+min(indice$annee_naissance, na.rm = TRUE)
+max(indice$annee_naissance, na.rm = TRUE)
+is.numeric(indice$annee_naissance)
+rm(age)
+rm(age_patient)
+}
+indice <- indice[!(indice$annee_naissance == max(indice$annee_naissance, na.rm = TRUE)),]
+#Adapt dataset#
+{
+##Change MPOC value##
+indice$CCC_091[indice$CCC_091 == 1] <- 1
+indice$CCC_091[indice$CCC_091 == 2] <- 0
+##change sexe value##
+indice$sexe_srap[indice$sexe_srap == "F"] <- 0
+indice$sexe_srap[indice$sexe_srap == "M"] <- 1
+}
+##Remove unnecssary data##
+indice <- indice[,c(-39,-41)]
+#Convert numeric data into factor#
+{
+is.factor(indice$DHHDECF)  
+indice$DHHDECF <- as.factor(indice$DHHDECF)
+is.factor(indice$DHHDLVG)  
+indice$DHHDLVG <- as.factor(indice$DHHDLVG)
+is.factor(indice$GEN_01)  
+indice$GEN_01 <- as.factor(indice$GEN_01)
+is.factor(indice$GEN_07)  
+indice$GEN_07 <- as.factor(indice$GEN_07)
+is.factor(indice$GEN_09)  
+indice$GEN_09 <- as.factor(indice$GEN_09)
+is.factor(indice$SLP_01)  
+indice$SLP_01 <- as.factor(indice$SLP_01)
+is.factor(indice$SLP_02)  
+indice$SLP_02 <- as.factor(indice$SLP_02)
+is.numeric(indice$HWT_3)  
+is.factor(indice$CCC_031)  
+indice$CCC_031 <- as.factor(indice$CCC_031)
+is.factor(indice$CCC_101)  
+indice$CCC_101 <- as.factor(indice$CCC_101)
+is.factor(indice$CCC_131)  
+indice$CCC_131 <- as.factor(indice$CCC_131)
+is.factor(indice$CCC_290)  
+indice$CCC_290 <- as.factor(indice$CCC_290)
+is.factor(indice$HUIDMOB)  
+indice$HUIDMOB <- as.factor(indice$HUIDMOB)
+is.factor(indice$FVC_2A)  
+indice$FVC_2A <- as.factor(indice$FVC_2A)
+is.factor(indice$PAC_3A)  
+indice$PAC_3A <- as.factor(indice$PAC_3A)
+is.factor(indice$PACDPAI)  
+indice$PACDPAI <- as.factor(indice$PACDPAI)
+is.numeric(indice$PACDTLE)  
+
+is.factor(indice$SMK_01A)  
+indice$SMK_01A <- as.factor(indice$SMK_01A)
+is.numeric(indice$SMK_01C)  
+is.numeric(indice$SMK_05B) 
+is.factor(indice$SMK_05D)
+indice$SMK_05D <- as.factor(indice$SMK_05D)
+is.numeric(indice$SMK_06C)  
+is.factor(indice$SMK_10)
+indice$SMK_10 <- as.factor(indice$SMK_10)
+is.numeric(indice$SMK_10C)  
+is.factor(indice$SMK_202)
+indice$SMK_202 <- as.factor(indice$SMK_202)
+is.numeric(indice$SMK_203)  
+is.factor(indice$ETS_10)  
+indice$ETS_10 <- as.factor(indice$ETS_10)
+is.factor(indice$ALC_1)  
+indice$ALC_1 <- as.factor(indice$ALC_1)
+is.factor(indice$ALC_2)  
+indice$ALC_2 <- as.factor(indice$ALC_2)
+is.numeric(indice$ALWDDLY)  
+is.factor(indice$DPS_13)
+indice$DPS_13 <- as.factor(indice$DPS_13)
+is.factor(indice$INC_5B)  
+indice$INC_5B <- as.factor(indice$INC_5B)
+is.numeric(indice$INC_8A)
+is.factor(indice$FSC_020)  
+indice$FSC_020 <- as.factor(indice$FSC_020)
+is.factor(indice$GEODUR2)  
+indice$GEODUR2 <- as.factor(indice$GEODUR2)
+is.factor(indice$CCC_091)
+indice$CCC_091 <- as.factor(indice$CCC_091)
+}
+
+#Only take CCC_091 value not equal to NA#
+indice <- indice[!is.na(indice$CCC_091),]
+
+#dataset for decision#
+y <- indice$CCC_091
+X <- indice[,-c(1:2)]
+
+#Select variable having an effect#
+Decision <- COPD_HEALTH_INDEX_fct(y, X, signiThresh = 0.05, slopeThresh = 0.1)
+
+
+
+
+
+
+
+
+
+#Create dataframe with nvaraible having an effect and having enough data#
+MPOC_Var <- indice[,colnames(indice) %in% Decision]
+MPOC_Var <- cbind(indice$NOINDIV_SRAP_BAN, indice$CCC_091, MPOC_Var)
+MPOC_Var <- MPOC_Var[,-c(7,8,13:17,19:21,23:24,26:28)]
+
+
+###Develop COPD###
+{
+ID_MPOC_OUI <- MPOC_Var[,1][MPOC_Var[,2] == 1]
+patient <- MPOC_Var[MPOC_Var[,1] %in% ID_MPOC_OUI,]
+ID_MPOC_NON <- unique(patient[,1][patient[,2] == 0])
+got_MPOC <- patient[patient[,1] %in% ID_MPOC_NON,]
+got_MPOC <- got_MPOC[-c(1,2,23,32,33),]
+got_MPOC[,16:17] <- scale(got_MPOC[,16:17])
+}
+summary(got_MPOC)
+####ALWAYS HAD COPD##
+{
+ID_MPOC_OUI <- MPOC_Var[,1][MPOC_Var[,2] == 1]
+ID_MPOC_NON <- MPOC_Var[,1][MPOC_Var[,2] == 0]
+
+#Difference between yes and# no#
+COPD_OUI <- setdiff(ID_MPOC_OUI,ID_MPOC_NON)
+
+#Only take the patient with no 0 and only 1#
+patient_OUI <- MPOC_Var[MPOC_Var[,1] %in% COPD_OUI,]
+
+#Select patient there more than 1 times#
+pat_id <- patient_OUI[,1][duplicated(patient_OUI$`indice$NOINDIV_SRAP_BAN`)]
+
+#Create data_frame for those patients#
+patient_OUI_wowow <- MPOC_Var[MPOC_Var[,1] %in% pat_id,]
+
+First_observations_always <- data.frame(matrix(nrow=length(unique(patient_OUI_wowow$`indice$NOINDIV_SRAP_BAN`)), ncol=ncol(patient_OUI_wowow)))
+colnames(First_observations_always) <- colnames(patient_OUI_wowow)
+Second_observations_always <- data.frame(matrix(nrow=length(unique(patient_OUI_wowow$`indice$NOINDIV_SRAP_BAN`)), ncol=ncol(patient_OUI_wowow)))
+colnames(Second_observations_always) <- colnames(patient_OUI_wowow)
+COPD_ID <- unique(patient_OUI_wowow$`indice$NOINDIV_SRAP_BAN`)
+for (i in 1:length(COPD_ID)){
+  x <- patient_OUI_wowow[patient_OUI_wowow$`indice$NOINDIV_SRAP_BAN` == COPD_ID[i],]
+  print(x$`indice$NOINDIV_SRAP_BAN`)
+  First_observations_always[i,] <- x[which.min(x$annee_naissance),]
+  Second_observations_always[i,] <- x[which.max(x$annee_naissance),]
+  
+  First_observations_always$`indice$CCC_091` <- 0
+  Second_observations_always$`indice$CCC_091` <- 1
+  got_MPOC_always <- rbind(First_observations_always,Second_observations_always)
+  got_MPOC_always[,16:17] <- scale(got_MPOC_always[,16:17])
+}
+
+}
+got_MPOC_always <- got_MPOC_always[-c(15,37),]
+got_MPOC_always$DHHDECF <- as.factor(got_MPOC_always$DHHDECF)
+got_MPOC_always$DHHDLVG <- as.factor(got_MPOC_always$DHHDLVG)
+got_MPOC_always$GEN_01 <- as.factor(got_MPOC_always$GEN_01)
+got_MPOC_always$GEN_07 <- as.factor(got_MPOC_always$GEN_07)
+got_MPOC_always$CCC_031 <- as.factor(got_MPOC_always$CCC_031)
+got_MPOC_always$CCC_101 <- as.factor(got_MPOC_always$CCC_101)
+got_MPOC_always$CCC_131 <- as.factor(got_MPOC_always$CCC_131)
+got_MPOC_always$CCC_290 <- as.factor(got_MPOC_always$CCC_290)
+got_MPOC_always$SMK_01A <- as.factor(got_MPOC_always$SMK_01A)
+got_MPOC_always$SMK_202 <- as.factor(got_MPOC_always$SMK_202)
+got_MPOC_always$ALC_1 <- as.factor(got_MPOC_always$ALC_1)
+got_MPOC_always$FSC_020 <- as.factor(got_MPOC_always$FSC_020)
+got_MPOC_always$sexe_srap <- as.factor(got_MPOC_always$sexe_srap)
+
+###Never Had COPD###
+{
+  ID_MPOC_OUI <- MPOC_Var[,1][MPOC_Var[,2] == 1]
+  ID_MPOC_NON <- MPOC_Var[,1][MPOC_Var[,2] == 0]
+  
+  #Difference between yes and# no#
+  COPD_Non<- setdiff(ID_MPOC_NON,ID_MPOC_OUI)
+  
+  #Only take the patient with no 0 and only 1#
+  patient_Non <- MPOC_Var[MPOC_Var[,1] %in% COPD_Non,]
+  
+  #Select patient there more than 1 times#
+  pat_id_non <- patient_Non[,1][duplicated(patient_Non$`indice$NOINDIV_SRAP_BAN`)]
+  
+  #Create data_frame for those patients#
+  patient_Non_wowow <- MPOC_Var[MPOC_Var[,1] %in% pat_id_non,]
+  patient_Non_wowow <- patient_Non_wowow[-c(59,68,333,406,567,576,601),]
+
+  First_observations_never <- data.frame(matrix(nrow=length(unique(patient_Non_wowow$`indice$NOINDIV_SRAP_BAN`)), ncol=ncol(patient_OUI_wowow)))
+  colnames(First_observations_never) <- colnames(patient_Non_wowow)
+  Second_observations_never <- data.frame(matrix(nrow=length(unique(patient_Non_wowow$`indice$NOINDIV_SRAP_BAN`)), ncol=ncol(patient_OUI_wowow)))
+  colnames(Second_observations_never) <- colnames(patient_Non_wowow)
+  COPD_ID <- unique(patient_Non_wowow$`indice$NOINDIV_SRAP_BAN`)
+  for (i in 1:length(COPD_ID)){
+    x <- patient_Non_wowow[patient_Non_wowow$`indice$NOINDIV_SRAP_BAN` == COPD_ID[i],]
+    print(x$`indice$NOINDIV_SRAP_BAN`)
+    First_observations_never[i,] <- x[which.min(x$annee_naissance),]
+    Second_observations_never[i,] <- x[which.max(x$annee_naissance),]
+    
+    First_observations_never$`indice$CCC_091` <- 0
+    got_MPOC_never <- rbind(First_observations_never,Second_observations_never)
+    got_MPOC_never[,16:17] <- scale(got_MPOC_never[,16:17])
+  }
+  
+  got_MPOC_never <- got_MPOC_never[-c(14,55,115,130,148,162,180,185,188,197,221,223,254,256,258,298,300,381,412,453,513,528,
+                                      546,560,578,583,586,595,619,621,652,654,656,696,698,779),]
+  }
+summary(got_MPOC_never)
+got_MPOC_never$DHHDECF <- as.factor(got_MPOC_never$DHHDECF)
+got_MPOC_never$DHHDLVG <- as.factor(got_MPOC_never$DHHDLVG)
+got_MPOC_never$GEN_01 <- as.factor(got_MPOC_never$GEN_01)
+got_MPOC_never$GEN_07 <- as.factor(got_MPOC_never$GEN_07)
+got_MPOC_never$CCC_031 <- as.factor(got_MPOC_never$CCC_031)
+got_MPOC_never$CCC_101 <- as.factor(got_MPOC_never$CCC_101)
+got_MPOC_never$CCC_131 <- as.factor(got_MPOC_never$CCC_131)
+got_MPOC_never$CCC_290 <- as.factor(got_MPOC_never$CCC_290)
+got_MPOC_never$SMK_01A <- as.factor(got_MPOC_never$SMK_01A)
+got_MPOC_never$SMK_202 <- as.factor(got_MPOC_never$SMK_202)
+got_MPOC_never$ALC_1 <- as.factor(got_MPOC_never$ALC_1)
+got_MPOC_never$FSC_020 <- as.factor(got_MPOC_never$FSC_020)
+got_MPOC_never$sexe_srap <- as.factor(got_MPOC_never$sexe_srap)
+##Procuste function#
+
+
+
+MPOC_OUI_Procrustre <- function(x){
+  MPOCData <- model.matrix(~.,x[,-(1:2)])
+  library(vegan)
+  pcaMPOCNon <- rda(MPOCData[x[,2] == 0,])
+  pcaMPOCOui <- rda(MPOCData[x[,2] == 1,])
+  procr <- procrustes(pcaMPOCNon, pcaMPOCOui)
+  data_ind <- numeric()
+  for(i in 1:nrow(procr$X)){
+    data_ind[i] <- dist(rbind(procr$X[i,], procr$Yrot[i,]))
+  }
+  data_ind
+  names(data_ind) <- x[,1][x[,2] == 0]
+  plot(procrustes(pcaMPOCNon, pcaMPOCOui))
+  print(data_ind)
+}
+data_ind <- MPOC_OUI_Procrustre(got_MPOC)
+mean(data_ind)
+data_ind_always <- MPOC_OUI_Procrustre(got_MPOC_always)
+mean(data_ind_always)
+data_ind_never <- MPOC_OUI_Procrustre(got_MPOC_never)
+mean(data_ind_never)
+
+
+
+
+x <- got_MPOC
+MPOCData <- model.matrix(~.,x[,-(1:2)])
+pcaMPOCNon <- rda(MPOCData[x[,2] == 0,])
+plot(pcaMPOCNon)
+pcaMPOCOui <- rda(MPOCData[x[,2] == 1,])
+plot(pcaMPOCOui)
+summary(pcaMPOCNon)
+summary(pcaMPOCOui)
+
+
+x <- got_MPOC_always
+MPOCData <- model.matrix(~.,x[,-(1:2)])
+pcaMPOCNon <- rda(MPOCData[x[,2] == 0,])
+plot(pcaMPOCNon)
+pcaMPOCOui <- rda(MPOCData[x[,2] == 1,])
+plot(pcaMPOCOui)
+summary(pcaMPOCNon)
+summary(pcaMPOCOui)
+
+x <- got_MPOC_never
+MPOCData <- model.matrix(~.,x[,-(1:2)])
+pcaMPOCNon <- rda(MPOCData[x[,2] == 0,])
+plot(pcaMPOCNon)
+pcaMPOCOui <- rda(MPOCData[x[,2] == 1,])
+plot(pcaMPOCOui)
+summary(pcaMPOCNon)
+summary(pcaMPOCOui)
+
+
+
+
+
+
+
+##DONT kNOW##
+{
+
+IDBase <- unique(indice[indice[,2] == 1,1])   
+
+Presence_Mpoc <- indice[,1:2]
+Presence_Mpoc
+
+
+Presence_Mpoc_2 <- Presence_Mpoc[Presence_Mpoc[,2] == 1,1]
+Presence_Mpoc_2
+
+Presence_Mpoc_3 <- indice[-(indice$`indice[, 1]` == IDBase),]
+ID <- unique(indice$`indice[, 1]`)
+ID_MPOC <- vector(mode = "logical")
+counter <- 1
+for(i in 1:length(ID)){
+  for (j in 1:length(IDBase))
+    if((ID[i] == IDBase[j]) == FALSE){
+      ID_MPOC[counter] <- ID[i]    
+      counter <- counter + 1 
+    }
+}
+
+
+allo <- setdiff(ID, IDBase)
+
+
+"0000051211" == "0001984937"
+indice[1,1] == IDBase[counter]
+
+plot(pcaMPOCNon, scaling = 1, display = "sites")
+
+length(ID) - length(IDBase)
+
+
+
+
+
+plot(pca, scaling = 1, display = "sites", type = "n")
+points(scores(pca, scaling = 1,
+              display = "sites")[gotMPOCclean$`indice$CCC_091` == 0,],
+       col = "blue", pch = 19)
+
+points(scores(pca, scaling = 1,
+              display = "sites")[gotMPOCclean$`indice$CCC_091` == 1,],
+       col = "orange", pch = 19)
+
+}
+
+
+
+ 
+
+

@@ -1,0 +1,27 @@
+{
+    "id": "C9CA2786",
+    "path": "~/Desktop/COPD_Health_Index/R/COPD_Health_Index_function.R",
+    "project_path": "R/COPD_Health_Index_function.R",
+    "type": "r_source",
+    "hash": "4038366374",
+    "contents": "",
+    "dirty": false,
+    "created": 1673191519656.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "91,17",
+        "scrollLine": "0"
+    },
+    "folds": "12|67|80|0|\n91|34|105|0|\n",
+    "lastKnownWriteTime": 1673193458,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1673193458171,
+    "read_only": false,
+    "read_only_alternatives": []
+}
